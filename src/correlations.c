@@ -218,8 +218,8 @@ void GetGeneMetric(void){
  * Function: GetCutOff
  * Usage: GetCutoff()
  * -------------------
- * This functions finds out what cutoff the user wants.  If they enter less than 0.5
- * it will use 0.5.  The default is 0.8
+ * This functions finds out what cutoff the user wants.  If they enter less than 0.2
+ * it will use 0.2.  The default is 0.8
  */
  
 void GetCutOff(void){
@@ -258,7 +258,7 @@ void GetNumCorrelations(void){
 	char inputLine[64];
 	
 	printf("How many correlations do you want?\n");
-	printf("(Enter a number up to 50, or hit return to get the default of 20)");
+	printf("(Enter a number, or hit return to get the default of 20)");
 	
 	gets(inputLine);
 
@@ -266,10 +266,6 @@ void GetNumCorrelations(void){
 	 	/* they just hit return, so use default */
 	 }else{
 	 	gMaxNumCorrelations=(int)StringToReal(inputLine);
-	 	if (gMaxNumCorrelations >50){
-	 		printf("You entered a value greater than 50.  50 will be used as the default\n");
-	 		gMaxNumCorrelations = 50;
-	 	}
 	 	if (gMaxNumCorrelations < 1) Error("You chose a value less than 1");
 	 } 
 	 
@@ -385,11 +381,7 @@ void ParseOptions(char *ifile, int argc, char** argv){
       	}else if (!(strcmp("-num", argv[i]))){ /* number of correlations that they want */
       	
       		gMaxNumCorrelations=(int)StringToReal(argv[i+1]);
-	 		if (gMaxNumCorrelations >50){
-	 			printf("You entered a value greater than 50.  50 will be used as the default\n");
-	 			gMaxNumCorrelations = 50;
-	 		}
-	 		if (gMaxNumCorrelations < 1) Error("You chose a value less than 1");
+		if (gMaxNumCorrelations < 1) Error("You chose a value less than 1");
 
 	}else if (!(strcmp("-showCorr", argv[i]))){ /* indicating whether they want the correlations */
 
@@ -429,7 +421,7 @@ void Usage(void){
   	printf("-corr   1|2   Allows you to specify whether you want an uncentered (1) or a centered (2) metric.\n");
   	printf("              1 is the default\n\n");
   	printf("-cutoff       Allows you to specify a cutoff, correlations above which will be stored\n\n");
-  	printf("-num          Allows you to specify the number of correlations, up to 50, which you would like to store\n");
+  	printf("-num          Allows you to specify the number of correlations that you would like to store\n");
   	printf("              20 is the default\n\n"); 
   	printf("-l      0|1   Allows you to specify if you want to log transform the data (1)\n");
   	printf("              0 is the default\n\n");

@@ -6,8 +6,8 @@ package Microarray::Explorer;
 # whereas the dataset class is the Model.
 
 # $Author: sherlock $
-# $Revision: 1.17 $
-# $Date: 2004/05/20 23:15:55 $
+# $Revision: 1.20 $
+# $Date: 2004/07/15 14:31:20 $
 # $Locker: jdemeter
 
 # License information (the MIT license)
@@ -39,10 +39,11 @@ package Microarray::Explorer;
 use strict;
 use CGI qw/:all/;
 use GD;
+use vars qw($VERSION);
 
 use Microarray::Config;
 
-my $VERSION = "2.0";
+$VERSION = "2.0";
 $| = 1;
 
 # need this global for switching row color in markup 
@@ -64,12 +65,12 @@ my $kPrefRadarColWidth   = 1;   # preferred COLUMN width in radar window - an ar
 my $kMaxAnnotFieldLength = 150; # max length for a field in the zoom frame to be displayed
 my $kRadarMargin         = 20;  # the margin on the right side of the radar frame - affects the
                                 # the size of the bracket size as well
+
 ### for the search tool ......  ##################
 my $kNumberOfMaxHits = 200;     # the max number of hits - result of search - to be displayed
 
 my $BGIMAGE = "toolbarBackground.gif";
 my $BRACKET = "dashedLine.gif";
-
 
 #######################################################################
 # Public class methods
@@ -91,10 +92,15 @@ sub New {
 #   $config->gxDataPath directory.
 
     my $class = shift;
+
     my $self  = { };
+
     bless($self, $class);
+
     $self->_init(@_);
+
     return $self;
+
 }
 
 #######################################################################
@@ -110,25 +116,33 @@ sub print_frameset {
 #
 #   
     my $self  = shift;
-    my ($title, $url, $radarFrameWidth, $toolBarHeight);
+
     # The title of the document
-    $title  = "geneXplorer ".$VERSION." : ".ucfirst($self->_name);
+
+    my $title  = "geneXplorer ".$VERSION." : ".ucfirst($self->_name);
+
     $title .= " : ".$self->_dataset->width()." Experiments";
     $title .= " : ".$self->_dataset->height()." Genes";
 
     # Construct the url: 
-    $url  = $self->{'info'}->{'url'};
+
+    my $url  = $self->{'info'}->{'url'};
+
     $url .= $self->{'info'}->{'scriptname'};
     $url .= "?n=";
     $url .= $self->_name;
     $url .= $self->{'info'}->{'url_params'};
 
     # The width of the radar frame depends on the number of experiments 
-    $radarFrameWidth = (($self->_dataset->width() * $self->_radar_x) + $kRadarMargin);
+
+    my $radarFrameWidth = (($self->_dataset->width() * $self->_radar_x) + $kRadarMargin);
+
     # the toolbar is 100 pixels high
-    $toolBarHeight = 100;
+
+    my $toolBarHeight = 100;
 
     print title($title);
+
     print frameset({-cols         => "$radarFrameWidth, *",
 		    -marginheight => '0',
 		    -marginwidth  => '0',
@@ -136,6 +150,7 @@ sub print_frameset {
 		    -frameborder  => 'yes',
 		    -resize       => 'no',
 		    -border       =>  '3'},
+
 		   frame({'-name'      => 'r',
 			  -src         => $url."&a=r",
 			  -marginwidth => 0,
@@ -144,11 +159,13 @@ sub print_frameset {
 			  -scrolling   => "no"}
 			 ),
 		   "\n",
+
 		   frameset({-rows         => "$toolBarHeight, *", 
 			     -framespacing => '0',
 			     -frameborder  => '1',
 			     -frameborder  => 'no',
 			     -border       => '0'},
+
 			    frame({'-name'       => 't',
 				   -src          => $url."&a=t",
 				   -marginwidth  => 0,
@@ -162,80 +179,90 @@ sub print_frameset {
 				   -border       => 1}),
 			    "\n")
 		   );
-#    return 1;
+
 }
 
 #----------------------------------------------------------------------
 sub radar {
 #----------------------------------------------------------------------
-# This subroutine creates the content of the radar frame.
+# This subroutine prints out the content of the radar frame.
 #
 #  usage: $explorer->radar();
 
     my $self = shift;
  
-    my ($width, $height, $imageSource, $radarImgLink, $bracketSize, $js, $style);
-
     # Image attributes: 
-    $width  = $self->_radar_x * $self->_dataset->width;    # width of radar image in pxl
-    $height = $self->_radar_y * $self->_dataset->height(); # height of radar image in pxl
-    $imageSource = $self->_imgURL.$self->_name.'/'.$self->_dataset->fileBaseName.".data_matrix.".$self->_imgType;
+
+    my $width  = $self->_radar_x * $self->_dataset->width;    # width of radar image in pxl
+    my $height = $self->_radar_y * $self->_dataset->height(); # height of radar image in pxl
+
+    my $imageSource =
+
+	$self->_imgURL.$self->_name.'/'.$self->_dataset->fileBaseName.".data_matrix.".$self->_imgType;
+
     # The image map for the radar image
-    $radarImgLink = image_button({-src    => $imageSource,
-				  -width  => $width,
-				  -height => $height,
-				  -align  => 'LEFT',
-				  -border => '0', 
-				  -hspace => '0', 
-				  -vspace => '0', 
-				  -vsize  => '100%',
-				  -name   => 'radar'}); 
+
+    my $radarImgLink = image_button({-src    => $imageSource,
+				     -width  => $width,
+				     -height => $height,
+				     -align  => 'LEFT',
+				     -border => '0', 
+				     -hspace => '0', 
+				     -vspace => '0', 
+				     -vsize  => '100%',
+				     -name   => 'radar'}); 
 
     # This section determines the bracket size in pixels for $kZoomWindowHeight rows
-    $bracketSize = $self->_radar_y * $kZoomWindowHeight; 
+
+    my $bracketSize = $self->_radar_y * $kZoomWindowHeight; 
+
     # if the dataset height is less than $kZoomWindowHeight
+
     $bracketSize = ($bracketSize > $height) ? $height : $bracketSize;
+
     # and creates the javascript for the bracket
-    ($js, $style) = $self->_js_bracket ($bracketSize, $height);
+
+    my ($js, $style) = $self->_js_bracket($bracketSize, $height);
 
     # Print the html document
+
     print start_html(-bgcolor => 'white',
 		     -script  => {-language => 'JavaScript',
 				  -code     => $js},
 		     -style   => {-code     => $style},
-		     -onLoad  => 'init();'
-		     );
+		     -onLoad  => 'init();');
+
     print start_form(-action  => $self->{'info'}->{'self'},
-		     -target  => 'z'
-		     ),
+		     -target  => 'z'),
+
     div({-id    => "radar1",
 	 -class => "radar"},
-	$radarImgLink # print the radar image
-	),
+	$radarImgLink), # print the radar image	
+
     div({-id    => "top_bar", # upper half of bracket
 	 -class => "bar"}, 
 	img({-border => "0",
 	     -src    => $self->_commonImageURL.$BRACKET,
 	     -width  => ($kRadarMargin * 2),
-	     -height => 2}
-	    )
-	),
-    div({-id    => "bottom_bar", #bottom half of bracket
+	     -height => 2})),
+
+    div({-id    => "bottom_bar", # bottom half of bracket
 	 -class => "bar"}, 
 	img({-border => "0",
 	     -src    => $self->_commonImageURL.$BRACKET,
 	     -width  => ($kRadarMargin * 2),
-	     -height => 2}
-	    )
-	);
+	     -height => 2}));
 
     print hidden({'-name'   => 'a', 
 		  -value    => 'z', 
-		  -override => 1}
-		 );
+		  -override => 1});
+
     print $self->_hide_params();
+
     print end_form();
+
     print end_html();
+
 }
 
 #----------------------------------------------------------------------
@@ -248,47 +275,54 @@ sub toolbar {
     my $self = shift;
 
     # GeneXplorer logo
+
     my $geneXplorer = b("&nbsp;gene".font({-color=>'#FF8800'},"X")."plorer ".$VERSION);
+
     $geneXplorer    = font({-face    => 'verdana,arial,sans-serif',
 			    -size    => 2,
-			    -bgcolor => 'beige'}, $geneXplorer
-			   );
+			    -bgcolor => 'beige'}, $geneXplorer);
+
     chomp($geneXplorer);
 
     # to diplay the info pointed to:
+
     my $js_info = "function info(txt) { window.frame[1].form[0].text[0].value=(txt) };\n";
 
     # print the html table containing the various tools
+
     print start_html(-background=>$self->_commonImageURL.$BGIMAGE, 
 		     -script =>$js_info,
 		     -bgcolor=>'white');
     print center(
-		  table({-cellpadding => '3',
-			 -cellspacing => '0',
-			 -vspace      => '0',
-			 -hspace      => '0',
-			 -border      => '0'},
-			Tr ({-valign => 'middle',
-			     -align  => 'center',
-			     -height => '10'},
-			    $geneXplorer,
-			    ),
-			Tr({-nowrap => '',
-			    -valign => 'middle',
+		 table({-cellpadding => '3',
+			-cellspacing => '0',
+			-vspace      => '0',
+			-hspace      => '0',
+			-border      => '0'},
+
+		       Tr ({-valign => 'middle',
 			    -align  => 'center',
 			    -height => '10'},
-			   $self->_infobox     # make the infobox
-			   ),
-			Tr({-nowrap => '',
-			    -valign => 'middle',
-			    -align  => 'center',
-			    -height => '10'},
-			   $self->_searchTool, # make the search tool
-			   $self->_changeTool  # make the change scale tool
-			   )
-			)
+			   $geneXplorer),
+		       
+		       Tr({-nowrap => '',
+			   -valign => 'middle',
+			   -align  => 'center',
+			   -height => '10'},
+			  $self->_infobox),     # make the infobox
+		       
+		       Tr({-nowrap => '',
+			   -valign => 'middle',
+			   -align  => 'center',
+			   -height => '10'},
+			  $self->_searchTool, # make the search tool
+			  $self->_changeTool)  # make the change scale tool
+		       
+		       )
 		 );
+
     print end_html();
+
 }
 
 #----------------------------------------------------------------------
@@ -300,28 +334,35 @@ sub zoom {
 #   usage: $explorer->zoom();
 
     my $self = shift;
-    my ($yStart, $yEnd, $height, $message, $x, $y, $xClick, $yClick);
 
     # Need to find out which genes to display 
-    $x = ($self->_radar_x) ? $self->_radar_x : $self->_setZoom_x;
-    $y = ($self->_radar_y) ? $self->_radar_y : $self->_setZoom_y;
-    $xClick = int (param('radar.x') / $x);
-    $yClick = int (param('radar.y') / $y); # The click was on ROW: yClick 
+
+    my $x = ($self->_radar_x) ? $self->_radar_x : $self->_setZoom_x;
+    my $y = ($self->_radar_y) ? $self->_radar_y : $self->_setZoom_y;
+
+    my $xClick = int (param('radar.x') / $x);
+    my $yClick = int (param('radar.y') / $y); # The click was on ROW: yClick 
 
     # if possible, choose a few ROWs above the click
-    $yStart = (($yClick - 2) > 0) ? ($yClick - 2) : 0;
+
+    my $yStart = (($yClick - 2) > 0) ? ($yClick - 2) : 0;
+
     # and if there are enough ROWs, display $kZoomWindowHeight
-    $yEnd   = $yStart + $kZoomWindowHeight;
-    $height = $self->_dataset->height();
+
+    my $yEnd   = $yStart + $kZoomWindowHeight;
+    my $height = $self->_dataset->height();
+
     $yEnd   = ($yEnd < $height) ? $yEnd : $height - 1;
 
     # Make a message for the zoom frame
-    $message = " Zoom ";
+
+    my $message = " Zoom ";
     $message = $self->_message($message);
 
     # create the content of the frame
+
     $self->_make_zoom_image([$yStart..$yEnd], $message, '');
-    return;
+
 }
 
 #----------------------------------------------------------------------
@@ -337,48 +378,67 @@ sub search_feature {
 #                              (they are combined using 'AND')
 #                   $field   - has to be one value of %kDespcriptions
 
-    my $self        = shift;
-
-    my ($message, $numHits, $add_message, $hits, $query, $field, $error, @query);    
+    my $self = shift;
 
     # check the parameters passed in
-    $query = _untaint(param('q'));
-    $field = _untaint(param('f'));
+
+    my $query = _untaint(param('q'));
+    my $field = _untaint(param('f'));
+
     # make sure the words are long enough
-    @query = sort {length($a) <=> length($b)}split(/\s+/, $query);
+
+    my @query = sort {length($a) <=> length($b)} split(/\s+/, $query);
+
     if (length($query[0]) < 2) {
+
 	print $self->_start_html;
 	print $self->_message("&nbsp;Please use at least two letter long words in your search!");
 	return;
+
     }
 
     # create message for zoom window
-    $message  = "<B style=\"color:black;background-color:#ffff66\">";
+
+    my $message  = "<B style=\"color:black;background-color:#ffff66\">";
+
     $message .= $query;
     $message .= "</B>"; 
 
-    # find the hits 
-    $hits = $self->_get_search_hits(\@query, $field);
-    $numHits = $#$hits + 1;
+    # find the hits
+ 
+    my $hits    = $self->_get_search_hits(\@query, $field);
+    my $numHits = $#$hits + 1;
 
     if ($numHits > 0) {
+
+	my $add_message;
+
 	if ( $numHits > $kNumberOfMaxHits ) { 
+
 	    @$hits = @$hits[0..($kNumberOfMaxHits - 1)]; 
 	    $add_message = " Only the first $kNumberOfMaxHits are shown."; 
 	}
+
 	$message = "&nbsp;Search for $message returned ".$numHits." hits.".$add_message."\n";
-    } 
-    else {
+
+    }else {
+
 	$message = "&nbsp;The search for $message did not return any hits. Please try again.";
+
     }
+
     $message = $self->_message($message);
+
     if ($numHits <= 0) {
 	print $self->_start_html;
 	print $message;
 	return;
     }
+
     # Create the content for zoom window to display hits
+
     $self->_make_zoom_image($hits, $message, '');
+
 }
 
 #----------------------------------------------------------------------
@@ -390,26 +450,36 @@ sub neighbors {
 # are retrived and their expression is displayed in the zoom frame.
 
     my $self = shift;
-    my (@idx, @corrs, $message, $seed);
 
     # the vector we want to correlate all others against 
-    $seed = param('seed') ? param('seed') : int( param('radar.y') / $self->_radar_y );
+
+    my $seed = param('seed') ? param('seed') : int( param('radar.y') / $self->_radar_y );
+
     # the correlated genes indeces are returned in @idx, the correlations in @corrs
+
+    my (@idx, @corrs);
+
     $self->_dataset->correlations($seed, \@idx, \@corrs);
 
     # since we want the seed as well, we stuff it in the array (on the 'left' side)
+
     unshift (@idx, $seed);
+
     # it's correlated perfectly to itself ( = 1)
+
     unshift (@corrs, 1);
 
     # create message for the zoom window
-    $message = "<B style=\"color:black;background-color:#ffff66\">";
+
+    my $message = "<B style=\"color:black;background-color:#ffff66\">";
+
     $message = "&nbsp;Neighbors for: ".$message.$self->_dataset->getFeature($idx[0],"NAME")."</B>";
     $message = $self->_message($message);
 
     # call the sub to make the content of the zoom frame
+
     $self->_make_zoom_image(\@idx, $message, \@corrs);
-    return;
+
 }
 
 #######################################################################
@@ -427,9 +497,11 @@ sub _init {
     $self->{'dataset'}       = $$init_href{'dataset'} || die "You need to provide a valid dataset object to Explorer!";
     $self->{'config'}        = $$init_href{'config'}  || die "You need to provide a valid config object to Explorer!";
     $self->{'displayConfig'} = $$init_href{'displayConfig'} || die "You need to provide a valid displayConfig file to Explorer!";
+
     # init the info fields of the explorer object
+
     $self->_info;
-    return;
+
 }
 
 #----------------------------------------------------------------------
@@ -686,24 +758,31 @@ sub _make_zoom_image {
 # - array reference  
 
     my $self = shift;
+
     my ($rows_ra, $message, $corr_ra) = @_;
-    my ($row_images, $html_table, @row_image_links, $exptImage, $expImageMap, $height, $imgWidth, $expImgHeight);
+
     my $js = script({-language => "JavaScript"}, 
-		    "function info(txt) { parent.t.document.infobox.text.value=(txt) };"
-		    )."\n";
+		    "function info(txt) { parent.t.document.infobox.text.value=(txt) };")."\n";
 
     # This section creates a table with each row showing data for a gene 
     # get image rows requested 
-    $row_images = $self->_make_row_image ($rows_ra);
+
+    my $row_images = $self->_make_row_image ($rows_ra);
+
     # mark up the image rows and and create html table using feature info
-    $html_table = $self->_make_html_table($rows_ra, $row_images, $corr_ra);
+
+    my $html_table = $self->_make_html_table($rows_ra, $row_images, $corr_ra);
 
     $self->_makeExptImageMap();
     
     $self->_start_html;
+
     print $js;
+
     print $message;
+
     print $self->{'exptMap'};
+
     print table({-border      => 0,
 		 -cellspacing => 2,
 		 -cellpadding => 0,
@@ -721,9 +800,10 @@ sub _make_zoom_image {
 		      ), "\n"
 		   ), "\n"
 		)."\n";
-    print end_html();
-}
 
+    print end_html();
+
+}
 
 #--------------------------------------------------------------------
 sub _make_row_image {
@@ -1626,17 +1706,21 @@ __END__
 
 =pod
 
+=head1 Name
+
+Microarray::Explorer - class for viewing clustered expression data over the web
+
 =head1 Abstract
 
- The Explorer class belongs to the package Microarray. It functions as 
- a web viewer for dataset objects from the same package. Following the 
- Model/View/Controller concept, the explorer class is the View/Controller, 
- whereas the dataset class is the Model.
+The Explorer class belongs to the package Microarray. It functions as
+a web viewer for dataset objects from the same package. Following the
+Model/View/Controller concept, the explorer class is the
+View/Controller, whereas the dataset class is the Model.
 
 =head2 Intended Behaviour
 
-    Explorer will display the dataset object in a web browser in a frameset 
-    of 3 frames. 
+Explorer will display the dataset object in a web browser in a
+frameset of 3 frames.
 
     The frames are:   - radar frame   - left side of the window
                       - toolbar frame - top of right side of window  
@@ -1644,9 +1728,10 @@ __END__
 
 =head3 Radar frame
 
-    The radar frame displays the whole dataset as an image map. The genes 
-    (clones, ...) are shown are the rows of the image, while the experiments 
-    are shown as the columns. Clicking the image will have 2 effects: 
+The radar frame displays the whole dataset as an image map. The genes
+(clones, ...) are shown are the rows of the image, while the
+experiments are shown as the columns. Clicking the image will have 2
+effects:
 
                 - the expression patterns for the next XXX genes starting at
                   position of the click are displayed in the zoom frame
@@ -1655,142 +1740,148 @@ __END__
                   frame is positioned at the height of the click and the bracket
                   shows the XXX genes selected and magnified on the zoom frame.
 
-    The size of the image is maximized both horizontally and vertically.
+The size of the image is maximized both horizontally and vertically.
 
 =head3 Toolbar frame
 
-    The toolbar allows actions on either the radar frame or the zoom frame.
+The toolbar allows actions on either the radar frame or the zoom
+frame.
 
-    For the radar frame it allows a simple customization: changing the width of
-    the radar image. Selecting any of the allowed percentages changes the current
-    width of the image proprotionately.
+For the radar frame it allows a simple customization: changing the
+width of the radar image. Selecting any of the allowed percentages
+changes the current width of the image proprotionately.
 
-    For the zoom frame, it provides a search tool. The various fields of annotations
-    or all of them for the genes can be searched for a string. The string can be 
-    entered in a text field. The string may contain more than one terms, spaces
-    are interpreted as term separators. The terms are conbined using logical 'AND'.
-    The hits resulting from the search are displayed in the zoom frame, as expression
-    patterns. 
-    The number of hits displayed in the zoom window is limited to 200 hits and the 
-    length of each term in te search string should be at least 2 characters long.
+For the zoom frame, it provides a search tool. The various fields of
+annotations or all of them for the genes can be searched for a
+string. The string can be entered in a text field. The string may
+contain more than one terms, spaces are interpreted as term
+separators. The terms are conbined using logical 'AND'.  The hits
+resulting from the search are displayed in the zoom frame, as
+expression patterns.  The number of hits displayed in the zoom window
+is limited to 200 hits and the length of each term in te search string
+should be at least 2 characters long.
 
-    In addition, the toolbar frame contains an Info Box that displays various textual 
-    information dependent on the position of the mouse pointer over the zoom frame. 
-    It can display: 
-    
-                 - gene information in the NAME field when the mouse is positioned 
-                   over an image row
+In addition, the toolbar frame contains an Info Box that displays
+various textual information dependent on the position of the mouse
+pointer over the zoom frame.  It can display:
 
-                 - experiment info, if positioned above the experiment image map
-                  
-                 - correlation of a genes expression pattern to that of the top
-                   gene in to zoom window displaying correlations, when the pointer
-                    is above is above the correlation image.
+             - gene information in the NAME field when the mouse is positioned 
+               over an image row
+
+             - experiment info, if positioned above the experiment image map
+              
+             - correlation of a genes expression pattern to that of the top
+               gene in to zoom window displaying correlations, when the pointer
+                is above is above the correlation image.
 
 =head3 Zoom frame
-     
-    The zoom frame displays expression patterns and annotations for genes in the 
-    dataset. It can display genes selected from: 
 
-                 - radar frame; it displays a given number of genes starting from the 
-                   genes whose image was clicked on
+The zoom frame displays expression patterns and annotations for genes
+in the dataset. It can display genes selected from:
 
-                 - the toolbar; the result of the search performed using the searchtool
-                   is displayed here
+             - radar frame; it displays a given number of genes starting from the 
+               genes whose image was clicked on
 
-                 - the zoom frame itself; when a row is clicked on in the radar frame,
-                   the genes with the highest correlation in their expression pattern 
-                   are displayed
+             - the toolbar; the result of the search performed using the searchtool
+               is displayed here
 
-    Information about various elements in the zoom frame is displayed in the Info Box
-    in the toolbar, dependent on the position of the mouse:
-     
-                 - experiment info
-                 - gene info
-                 - correlation value
+             - the zoom frame itself; when a row is clicked on in the radar frame,
+               the genes with the highest correlation in their expression pattern 
+               are displayed
+
+Information about various elements in the zoom frame is displayed in
+the Info Box in the toolbar, dependent on the position of the mouse:
+
+             - experiment info
+             - gene info
+             - correlation value
 
 =head1 Class Methods
 
 =head2 New
 
-    This is the constructor for the Explorer class.
-    
-    Usage:   $explObj = Microarray::Explorer->New( dataset        => $dataset,
+This is the constructor for the Explorer class.
+
+Usage:   $explObj = Microarray::Explorer->New( dataset        => $dataset,
 					           config         => $config,
 					           displayConfig  => $displayConfig};
 
-    Here $dataset should be a Microarray::CdtDataset object, $config is a 
-    Microarray::Config object, while $displayConfig is the name of a text file 
-    that contains info concerning how to mark up various elements of gene
-    annotations. It is expected that the displayConfig will be found in the 
-    $config->gxDataPath directory.
+Here $dataset should be a Microarray::CdtDataset object, $config is a
+Microarray::Config object, while $displayConfig is the name of a text
+file that contains info concerning how to mark up various elements of
+gene annotations.  It is expected that the displayConfig will be found
+in the $config->gxDataPath directory.
 
 =head1 Instance Methods
 
 =head2 print_frameset
 
- This subroutine will print the whole display window anew.
+This subroutine will print the whole display window anew.
  
   usage: $explorer->print_frameset();
 
 =head2 radar
 
- This subroutine creates the content of the radar frame.
+This subroutine creates the content of the radar frame.
  
   usage: $explorer->radar();
 
 =head2 toolbar
 
- This sub creates the toolbar frame
+This sub creates the toolbar frame
 
   usage: $explorer->toolbar();
 
 =head2 zoom
 
- This subroutine creates the content of the zoom frame when called from 
- the radar frame. 
+This subroutine creates the content of the zoom frame when called from
+the radar frame.
 
   usage: $explorer->zoom();
 
 =head2 search_feature
 
- This method takes a a string of query words and the name of the feature field
- to search. This way, one can search for gene symbols, gene names and/or 
- GenBank accession numbers or any or all fields in the feature description.
+This method takes a a string of query words and the name of the
+feature field to search.  This way, one can search for gene symbols,
+gene names and/or GenBank accession numbers or any or all fields in
+the feature description.
 
  usage: $explorer->search_feature("myWords", $field); 
 
-                   "myWords" - can have multiple words separated by space
-                                   (they are combined using logical 'AND')
-                   $field    - has to be one value of %kDespcriptions
+               "myWords" - can have multiple words separated by space
+                               (they are combined using logical 'AND')
+               $field    - has to be one value of %kDespcriptions
 
- The resulting hits are displayed in the zoom frame. If the number of hits
- is too high, only kNumberOfMaxHits are displayed. The words in the query 
- string have to be separated by spaces and the length of the words has to 
- be more than 1 character.
+The resulting hits are displayed in the zoom frame. If the number of
+hits is too high, only kNumberOfMaxHits are displayed. The words in
+the query string have to be separated by spaces and the length of the
+words has to be more than 1 character.
 
 =head2 neighbors
 
- This method generates the html and images to display the most correlated 
- gene expression vectors versus a seed vector. When a gene is clicked on 
- in the zoom window, the most highly correlated gens are retrieved and 
- their expression patterns are displayed in the zoom frame.
+This method generates the html and images to display the most
+correlated gene expression vectors versus a seed vector. When a gene
+is clicked on in the zoom window, the most highly correlated gens are
+retrieved and their expression patterns are displayed in the zoom
+frame.
 
   usage: $explorer->neighbors();
 
- The gene that was clicked on in the zoom frame is determined from the 
- cgi parameter 'seed'. The 'seed' gene is displayed as the first row
- on the zoom image, with a perfect correlation of 1. The genes with the 
- highest correlations are displayed in the order of the value of their
- correlation. All genes with correlation > 0.5 are displayed. The 
- correlation value is graphically indicated by the length of the orange
- bar positioned on the right side of the expression pattern of the gene,
- and the value can be displayed in the info bos by positioning the mouse
- above the orange bar of a gene of interest.
+The gene that was clicked on in the zoom frame is determined from the
+cgi parameter 'seed'. The 'seed' gene is displayed as the first row on
+the zoom image, with a perfect correlation of 1. The genes with the
+highest correlations are displayed in the order of the value of their
+correlation. All genes with correlation > 0.5 are displayed. The
+correlation value is graphically indicated by the length of the orange
+bar positioned on the right side of the expression pattern of the
+gene, and the value can be displayed in the info bos by positioning
+the mouse above the orange bar of a gene of interest.
 
 =head1 Authors
+
 Original work: Christian Rees
 
 Re-write: Janos Demeter
 jdemeter@genome.stanford.edu
+
 =cut

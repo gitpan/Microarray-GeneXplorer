@@ -1,6 +1,12 @@
+Changes
+LICENSE
+MANIFEST
+META.yml			Module meta-data (added by MakeMaker)
+Makefile.PL
+README
+VERSION
 bin/makeMicroarrayDataset.pl
 cgi-bin/gx
-Changes
 data/explorer/default.display_config
 data/explorer/hs.display_config
 data/explorer/hs_default.display_config
@@ -24,14 +30,8 @@ lib/Microarray/DataMatrix/TabDelimitedDataMatrix.pm
 lib/Microarray/DatasetImageMaker.pm
 lib/Microarray/Explorer.pm
 lib/Microarray/Utilities/Filesystem.pm
-LICENSE
-Makefile.PL
-MANIFEST
-META.yml			Module meta-data (added by MakeMaker)
-README
+src/Makefile.PL
 src/correlations.c
 src/correlations.h
-src/Makefile.PL
 t/test.t
 test.pl
-VERSION

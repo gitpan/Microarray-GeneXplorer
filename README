@@ -128,6 +128,49 @@ It is a file that allows you to specify some of the look and feel of
 gx, and to where certain things should link etc.  Some examples are 
 in the data/explorer directory.
 
+GeneXplorer allows you to specify some of the look and feel of gx and
+to configure linking out of gene annotations to external databases.
+The configuration file 'default.display_config' has to be placed in
+the /data/explorer directory to control where the various gene
+identifiers are linked.  Some examples for display config files can be
+found in the data/explorer directory in the distribution.
+
+GeneXplorer uses all gene annotations that are available in the cdt
+file and saves them in the '.feature_info' file at the time of dataset
+creation.  Because of the limitations of the cdt file format (see:
+http://genome-www5.stanford.edu/help/formats.shtml#cdt) it cannot be
+expected that the headers in the cdt file accurately describe the
+contents of the annotation columns. This has to be enforced manually
+by changing the headers in the .feature_info (or the cdt) file to
+match both the content of the columns and the corresponding entry in
+the display configuration file that specifies the external database to
+use.
+
+For example, the 'CLONEID' header in the '.feature_info' file
+indicates the column contains cloneids. The provided
+data/explorer/hs.diplay_config file links columns with headers
+'CLONEID' to the corresponding gene page in SOURCE
+(http://source.stanford.edu/cgi-bin/source/sourceSearch).  If the
+header for the column were not 'CLONEID' it'd need to be changed to
+ensure correct linking out.
+
+The display configuration file is extensible and new entries can be
+added to it; the format for new entries is described in the display
+configuration file itself.
+
+The '.feature_info' file can have unlimited number of annotation
+columns and all of them can be configured to a different external
+database, if so desired.  If they are present these columns will be
+displayed in the order of the corresponding entries in the config
+file.  Currently, due to the limitations of the .cdt file format, .cdt
+files can only have two annotation columns, so to have a .feature_info
+file with more than two columns of annotation, you must custom
+generate it - the makeMicroarrayDataset.pl program extracts the two
+annotation columns from the .cdt file, with their column headings.  In
+future, and extended version of the .cdt file format will be
+supported, which will allow an unlimited number of annotation columns
+in the .cdt file.
+
 Using GeneXplorer
 
 Once you have installed the Perl modules, and compiled the
@@ -170,7 +213,7 @@ There are several command-line options for makeMicroarrayDataset.pl
 information):
 
 makeMicroarrayDataset.pl -file <file/name> -name <intended/dataset/name> \
-[-rootpath <your_root_directory> -contrast <float> -colorscheme <rg|yb> -verbose]
+[-rootpath <your_root_directory> -contrast <float> -colorscheme <rg|yb> -corrcutoff <float> -verbose]
 
         -file           = (required) input file (currently only '.cdt' files supported)
 
@@ -189,6 +232,9 @@ makeMicroarrayDataset.pl -file <file/name> -name <intended/dataset/name> \
         -colorscheme    : (optional) color scheme used for generating the images
                           (rg = red/green, yb = yellow/blue ; defaults to yellow/blue)
 
+        -corrcutoff     : optional value for correlation cutoff during dataset creation
+                          (defaults to 0.5 if not specified; allowed range: 0.2 - 1.0)
+
         -verbose        : (optional) whether show feedback messages during run
 			  (no value required - simply provide the parameter)
 
@@ -197,7 +243,7 @@ makeMicroarrayDataset.pl -file <file/name> -name <intended/dataset/name> \
 
 eg:
 
-makeMicroarrayDataset.pl -file mydata.cdt -name mydata -rootpath /<rootpath>/ -imageout -verbose -contrast 2 -colorscheme rg
+makeMicroarrayDataset.pl -file mydata.cdt -name mydata -rootpath /<rootpath>/ -verbose -contrast 2 -corrcutoff 0.2 -colorscheme rg
 
 The program will create 7 files in:
 
@@ -289,3 +335,54 @@ For creation of subsequent datasets, as long as you are using the same
 rootpath directory, then you should be able to not worry about this
 step 2, and after creating your dataset should be able to simply
 change the n parameter passed to gx, and it will just work.
+
+Using the Correlations Program as a Standalone executable
+
+The correlations program, which is used by GeneXplorer during dataset
+creation, can also be used as a standalone piece of software to get a
+list of sorted correlations between each gene in a .pcl file.  For
+usage information, simply type:
+
+correlations -h
+
+which will give the following output:
+
+######################################################################
+
+The program "correlations" will take a preclustering file as an input,
+and produce a file containing the correlations for each gene in sorted
+order.  The output file will be named with the same stem as the input
+file, but with a .stdCor suffix
+
+Usage:
+
+The following command line arguments may be used:
+
+-f            Allows you to specify the preclustering filename.  Relative paths may be used
+
+-corr   1|2   Allows you to specify whether you want an uncentered (1) or a centered (2) metric.
+              1 is the default
+
+-cutoff       Allows you to specify a cutoff, correlations above which will be stored
+
+-num          Allows you to specify the number of correlations that you would like to store
+              20 is the default
+
+-l      0|1   Allows you to specify if you want to log transform the data (1)
+              0 is the default
+
+-u            Allows you to specify a unique id by which you output file will be named
+              eg.  correlations -f sample.pcl -u 888
+              will produce an output file named 888.stdCor
+
+-showCorr 0|1 specifies whether you want to see the correlations themselves.
+              1 is the default
+
+Questions or comments should be addressed to sherlock@genome.stanford.edu
+
+######################################################################
+
+Alternatively, if you have created a dataset using the
+makeMicroarrayDataset.pl script, you can write your own clients of the
+Microarray::CdtDataset class (see the documentation for that class),
+and retrive correlation through its interface.

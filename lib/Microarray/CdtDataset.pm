@@ -110,8 +110,8 @@ my $kCdtPath = $PACKAGE.'::__cdtPath';
 my $kName             = $PACKAGE.'::__name'; # the full qualified name of the dataset
 my $kFileBaseName     = $PACKAGE.'::__fileBaseName'; # the stem of the file names (for dataset)
 
-my $kDataPath      = $PACKAGE.'::__dataPath';
-my $kImagePath     = $PACKAGE.'::__imagePath';
+my $kDataPath         = $PACKAGE.'::__dataPath';
+my $kImagePath        = $PACKAGE.'::__imagePath';
 my $kContrast         = $PACKAGE.'::__contrast';
 my $kShouldInitialize = $PACKAGE.'::__shouldInitialize';
 my $kCdtFileObject    = $PACKAGE.'::__cdtFileObject';
@@ -120,14 +120,18 @@ my $kHeight           = $PACKAGE.'::__height';
 my $kWidth            = $PACKAGE.'::__width';
 my $kColorScheme      = $PACKAGE.'::__colorscheme';
 my $kConfig           = $PACKAGE.'::__config';
+my $kCorrCutoff       = $PACKAGE.'::__corrCutoff';
 
 my $kDefaultContrast       = 4;
 my $kDefaultInitialization = 0;
+my $kDefaultCorrCutoff     = 0.5;
 my $kDefaultColorScheme    = 'yb'; # yellow/blue
+
+my $kMinCorrCutoff   = 0.2;
 
 my $kImgType = Microarray::Config->ImageType;
 
-my @metaColumns = ($kWidth, $kHeight, $kContrast, $kColorScheme);
+my @metaColumns = ($kWidth, $kHeight, $kContrast, $kColorScheme, $kCorrCutoff);
 
 my %kColorSchemeTranslation = Microarray::Config->ColorSchemeTranslationHash;
 
@@ -195,6 +199,10 @@ sub new {
 #
 # colorscheme  :  Can either be 'red/green' (the default if none is
 #                 specified) or 'yellow/blue'
+#
+# corrcutoff   :  If a dataset is initiated for the first time, correlation
+#                 values are generated for each feature-pair and values
+#                 above the cutoff are saved in a binary .binCor file
 #
 # initialize   :  A filepath of the originating .cdt file indicate
 #                 whether to initialize all the required supporting
@@ -280,6 +288,7 @@ sub __checkAndSetConstructorArguments{
     $self->__checkAndSetDatasetName(%args);
     $self->__checkAndSetContrast(%args);
     $self->__checkAndSetColorScheme(%args);
+    $self->__checkAndSetCorrCutoff(%args);
 
 }
 
@@ -540,6 +549,38 @@ sub __checkAndSetColorScheme{
 
 }
 
+############################################################################
+sub __checkAndSetCorrCutoff{
+############################################################################
+# This method determines if the correlation cutoff value is valid, and then stores
+# the value in the object
+
+    my ($self, %args) = @_;
+
+    if (exists($args{'corrcutoff'})){
+	
+	if (!exists($args{'initialize'})){
+	    
+	    die "A 'corrcutoff' argument was provided to the ".ref($self)." constructor, but an initialize argument was not.";
+	    
+	}elsif ($args{'corrcutoff'} !~ /^[\d\.]+$/g  
+		|| $args{'corrcutoff'} > 1 
+		|| $args{'corrcutoff'} < $kMinCorrCutoff){
+	    
+	    die "The supplied value for the 'corrcutoff' argument must be a number \n\n".
+		"$kMinCorrCutoff  =<  corrcutoff  =<  1"."\n\nA value of $args{'corrcutoff'} was supplied.";
+	}
+	
+	$self->__setCorrCutoff($args{'corrcutoff'});
+	
+    }else{
+
+	$self->__setCorrCutoff($kDefaultCorrCutoff); # set the default
+
+    }
+
+}
+
 
 #####################################################################
 sub __checkRequiredFilesExist{
@@ -650,6 +691,16 @@ sub __setColorScheme {
 
     my ($self, $colorScheme) = @_;
     $self->{$kColorScheme} = $colorScheme;
+}
+
+
+#####################################################################
+sub __setCorrCutoff {
+#####################################################################
+# This method allows the correaltion cutoff to be set.
+
+    my ($self, $corrCutoff) = @_;
+    $self->{$kCorrCutoff} = $corrCutoff;
 }
 
 
@@ -800,6 +851,14 @@ sub colorScheme {
 # This method returns the colorScheme
 
     return $_[0]->{$kColorScheme};
+}
+
+#####################################################################
+sub corrCutoff {
+#####################################################################
+# This method returns the correlation cutoff
+
+    return $_[0]->{$kCorrCutoff};
 }
 
 
@@ -1016,7 +1075,8 @@ sub __prepareCorrelations {
 						   file   => $pclFileName);
 
     # then use the pcl file to create correlations
-    $pcl->createCorrelationsFile(cutoff=>0.5);
+
+    $pcl->createCorrelationsFile(cutoff=>$self->corrCutoff);
 
     # Now we can get rid of the pcl file
     unlink $pclFileName || warn "Couldn't unlink $pclFileName : $!";

@@ -57,9 +57,11 @@ my ($filepath, $name, $verbose, $rootpath, $help); # undef by default
 # defaults for this client
 my $contrast    = 4;
 my $colorscheme = 'yellow/blue';
+my $corrcutoff  = 0.5;
 
 my %args = (contrast     => \$contrast,
 	    colorscheme  => \$colorscheme,
+	    corrcutoff   => \$corrcutoff,
 	    name         => \$name,
 	    rootpath     => \$rootpath,
 	    verbose      => \$verbose,
@@ -67,7 +69,7 @@ my %args = (contrast     => \$contrast,
 	    help         => \$help);
 
 
-unless(&GetOptions( \%args, "name=s", "file=s", "rootpath=s", "contrast=f", "colorscheme=s", "verbose", "help")){
+unless(&GetOptions( \%args, "name=s", "file=s", "rootpath=s", "contrast=f", "colorscheme=s", "corrcutoff=f", "verbose", "help")){
     &Usage;
 }
 
@@ -96,6 +98,7 @@ my $config = Microarray::Config->new(rootpath => $rootpath,
 my $ds = Microarray::CdtDataset->new(name        => $name,
 				     contrast    => $contrast,
 				     colorscheme => $colorscheme,
+				     corrcutoff  => $corrcutoff,
 				     datapath    => $rootpath.'/data/explorer/',
 				     imagepath   => $rootpath.'/html/explorer/',
 				     initialize  => $filepath,
@@ -118,7 +121,7 @@ sub Usage {
 
   Usage:
 
-$0 -file <file/name> -name <intended/dataset/name> [-dataout <repository_directory> -imageout <image directory> -contrast <float> -colorscheme <rg|yb> -verbose]
+$0 -file <file/name> -name <intended/dataset/name> [-dataout <repository_directory> -imageout <image directory> -contrast <float> -colorscheme <rg|yb> -corrcutoff <float> -verbose]
 
     -----------------------------------------------------------------------------
 
@@ -137,6 +140,9 @@ $0 -file <file/name> -name <intended/dataset/name> [-dataout <repository_directo
 
     -colorscheme = optional color scheme used for generating the images
 	           (rg = red/green, yb = yellow/blue ; defaults to yellow/blue)
+
+    -corrcutoff  = optional value for correlation cutoff during dataset creation
+                   (defaults to 0.5 if not specified; allowed range: 0.2 - 1.0)
 
     -verbose     = show feedback messages during run
 

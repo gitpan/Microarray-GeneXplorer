@@ -98,7 +98,6 @@ sub __setImageType {
 
 }
 
-
 #####################################################################
 sub imageType {
 #####################################################################
@@ -107,7 +106,6 @@ sub imageType {
 
     return $_[0]->{$kImgType};
 }
-
 
 #####################################################################
 sub _dataset {
@@ -584,83 +582,95 @@ __END__
 
 =pod
 
+=head1 Name
+
+Microarray::DatasetImageMaker - Creates an image from a microarray dataset
+
 =head1 Abstract
 
- Microarray::DatasetImageMaker is a class that accepts a
- Microarray::Dataset object and produces the images based on the meta
- data contained in the dataset object.  It is meant to separate the
- image production code into something a little more manageable.
+Microarray::DatasetImageMaker is a class that accepts a
+Microarray::Dataset object and produces the images based on the meta
+data contained in the dataset object.  It is meant to separate the
+image production code into something a little more manageable.
 
 
 =head1 Usage
- 
-   $imageMaker = Microarray::DatasetImageMaker(dataset=>$dataSetObj);
 
- where $dataset is an CdtDataset object class or another concrete
- Dataset class.
+  $imageMaker = Microarray::DatasetImageMaker(dataset=>$dataSetObj);
+
+where $dataset is an CdtDataset object class or another concrete
+Dataset class.
 
 =head1 Future Plans
 
- This class should definitely be augmented to make images based on the
- various tree files
+This class should definitely be augmented to make images based on the
+various tree files
 
 
 =head1 Instance Constructor
 
 =head2 new
 
+my $imageMaker = Microarray::DatasetImageMaker->new();
 
 =head1 Instance Methods
 
 =head2 imageType
 
- returns the suffix for the image type being used for a newly
- constructed dataset
+returns the suffix for the image type being used for a newly
+constructed dataset
 
 =head2 makeImage
 
+This method actually results in an image being made.
+
+Usage:
+
+    $imageMaker->makeImage('dataset' => $self,
+			   'type'    => 'matrix');
+    $imageMaker->makeImage('dataset' => $self,
+			   'type'    => 'header'); 
 
 =head1 Protected Methods
 
 =head2 _dataset
 
- returns the dataset object used to initialize the imageMaker, if any
+returns the dataset object used to initialize the imageMaker, if any
 
 =head2 _contrast
 
- returns contrast used initialize the imageMaker, either belonging to
- the dataset or other optional argument
+returns contrast used initialize the imageMaker, either belonging to
+the dataset or other optional argument
 
 =head2 _name
 
- returns file base name of the dataset used initialize the
- imageMaker, either belonging to the dataset or other optional
- argument
+returns file base name of the dataset used initialize the imageMaker,
+either belonging to the dataset or other optional argument
 
 =head2 _imagePath
 
- returns image outpath of the dataset used initialize the imageMaker,
- either belonging to the dataset or other optional argument
+returns image outpath of the dataset used initialize the imageMaker,
+either belonging to the dataset or other optional argument
 
 =head2 _dataPath
 
- returns data outpath of the dataset used initialize the imageMaker,
- either belonging to the dataset or other optional argument
+returns data outpath of the dataset used initialize the imageMaker,
+either belonging to the dataset or other optional argument
 
 =head2 _height
 
- returns height of the dataset used initialize the imageMaker, either
- belonging to the dataset or other optional argument
+returns height of the dataset used initialize the imageMaker, either
+belonging to the dataset or other optional argument
 
 =head2 _width
 
- returns width used initialize the imageMaker, either belonging to
- the dataset or other optional argument
+returns width used initialize the imageMaker, either belonging to the
+dataset or other optional argument
 
 =head2 _colorscheme
 
- returns colorscheme used initialize the imageMaker, either belonging
- to the dataset or other optional argument
+returns colorscheme used initialize the imageMaker, either belonging
+to the dataset or other optional argument
 
 =head1 Authors
 
